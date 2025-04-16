@@ -1,35 +1,79 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from 'react';
+import './App.css';
 
-function App() {
-  const [count, setCount] = useState(0)
+type Player = {
+  id: string;
+  name: string;
+  chips: number;
+};
+
+export default function App() {
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [name, setName] = useState('');
+  const [chips, setChips] = useState('');
+
+  useEffect(() => {
+    const saved = localStorage.getItem('players');
+    if (saved) {
+      setPlayers(JSON.parse(saved));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('players', JSON.stringify(players));
+  }, [players]);
+
+  const addPlayer = () => {
+    if (!name || !chips) return;
+    const newPlayer: Player = {
+      id: Date.now().toString(),
+      name,
+      chips: parseFloat(chips),
+    };
+    setPlayers([...players, newPlayer]);
+    setName('');
+    setChips('');
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <div className="wrapper">
+      <h1>Poker Table</h1>
 
-export default App
+      <div className="input-area">
+        <input
+          placeholder="Player name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <input
+          placeholder="Chips"
+          value={chips}
+          type="number"
+          onChange={(e) => setChips(e.target.value)}
+        />
+        <button onClick={addPlayer}>Add Player</button>
+      </div>
+
+      <div className="table">
+        {players.map((p, i) => {
+          const angle = (360 / players.length) * i;
+          const radius = 130;
+          const x = radius * Math.cos((angle * Math.PI) / 180);
+          const y = radius * Math.sin((angle * Math.PI) / 180);
+          return (
+            <div
+              key={p.id}
+              className="player"
+              style={{
+                transform: `translate(${x}px, ${y}px)`,
+              }}
+            >
+              {p.name} <br /> ₹{p.chips.toFixed(2)}
+            </div>
+          );
+        })}
+        <div className="center">Pot Area</div>
+      </div>
+    </div>
+  );
+}
